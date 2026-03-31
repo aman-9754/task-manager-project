@@ -264,7 +264,213 @@ const restoreTask = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, task, "Task restored successfully"));
 });
 
+// method 1 : Multiple simple queries + combine results
+// const getTaskAnalytics = asyncHandler(async (req, res) => {
+//   const userId = req.user._id;
 
+//   // base filter
+//   const baseQuery = {
+//     user: userId,
+//     isDeleted: false,
+//   };
 
+//   // 1. total tasks
+//   const totalTasks = await Task.countDocuments(baseQuery);
 
-export { createTask, getAllTasks, getTaskById, updateTask, deleteTask, restoreTask };
+//   // 2. status counts
+//   const completedTasks = await Task.countDocuments({
+//     ...baseQuery,
+//     status: "completed",
+//   });
+
+//   const pendingTasks = await Task.countDocuments({
+//     ...baseQuery,
+//     status: "pending",
+//   });
+
+//   const inProgressTasks = await Task.countDocuments({
+//     ...baseQuery,
+//     status: "in-progress",
+//   });
+
+//   // 3 priority counts
+//   const highPriorityTasks = await Task.countDocuments({
+//     ...baseQuery,
+//     priority: "high",
+//   });
+
+//   const mediumPriorityTasks = await Task.countDocuments({
+//     ...baseQuery,
+//     priority: "medium",
+//   });
+
+//   const lowPriorityTasks = await Task.countDocuments({
+//     ...baseQuery,
+//     priority: "low",
+//   });
+
+//   // 4. overdue tasks
+//   const currentDate = new Date();
+//   const overdueTasks = await Task.countDocuments({
+//     ...baseQuery,
+//     dueDate: { $lt: currentDate },
+//     status: { $ne: "completed" }, // only consider non-completed tasks as overdue
+//   });
+
+//   // 5. completion rate
+//   const completionRate =
+//     totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100);
+
+//   // final response
+//   const analytics = {
+//     totalTasks,
+//     statusCounts: {
+//       completed: completedTasks,
+//       pending: pendingTasks,
+//       inProgress: inProgressTasks,
+//     },
+//     priorityCounts: {
+//       high: highPriorityTasks,
+//       medium: mediumPriorityTasks,
+//       low: lowPriorityTasks,
+//     },
+//     overdueTasks,
+//     completionRate,
+//   };
+
+//   return res
+//     .status(200)
+//     .json(
+//       new ApiResponse(200, analytics, "Task analytics fetched successfully"),
+//     );
+// });
+
+// method 2 : Aggregation pipeline (more efficient - single query)
+const getTaskAnalytics = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+
+  const analytics = await Task.aggregate([
+    {
+      $match: {
+        user: userId,
+        isDeleted: false,
+      },
+    }, // filter tasks of the user and not deleted
+    {
+      $group: {
+        _id: null,
+        totalTasks: { $sum: 1 },
+        completedTasks: {
+          $sum: {
+            $cond: [{ $eq: ["$status", "completed"] }, 1, 0],
+          },
+        },
+        pendingTasks: {
+          $sum: {
+            $cond: [{ $eq: ["$status", "pending"] }, 1, 0],
+          },
+        },
+        inProgressTasks: {
+          $sum: {
+            $cond: [{ $eq: ["$status", "in-progress"] }, 1, 0],
+          },
+        },
+        highPriorityTasks: {
+          $sum: {
+            $cond: [{ $eq: ["$priority", "high"] }, 1, 0],
+          },
+        },
+        mediumPriorityTasks: {
+          $sum: {
+            $cond: [{ $eq: ["$priority", "medium"] }, 1, 0],
+          },
+        },
+        lowPriorityTasks: {
+          $sum: {
+            $cond: [{ $eq: ["$priority", "low"] }, 1, 0],
+          },
+        },
+        overdueTasks: {
+          $sum: {
+            $cond: [
+              {
+                $and: [
+                  { $ne: ["$dueDate", null] }, // 🔥 add this
+                  { $lt: ["$dueDate", new Date()] }, // dueDate < current date
+                  { $ne: ["$status", "completed"] }, // status != completed
+                ],
+              },
+              1,
+              0,
+            ],
+          },
+        },
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        totalTasks: 1,
+        statusCounts: {
+          completed: "$completedTasks",
+          pending: "$pendingTasks",
+          inProgress: "$inProgressTasks",
+        },
+        priorityCounts: {
+          high: "$highPriorityTasks",
+          medium: "$mediumPriorityTasks",
+          low: "$lowPriorityTasks",
+        },
+        overdueTasks: 1,
+        completionRate: {
+          $cond: [
+            { $eq: ["$totalTasks", 0] },
+            0,
+            {
+              $round: [
+                {
+                  $multiply: [
+                    { $divide: ["$completedTasks", "$totalTasks"] },
+                    100,
+                  ],
+                },
+                0,
+              ],
+            },
+          ],
+        },
+      },
+    },
+  ]);
+
+  // if there are no tasks, analytics will be an empty array, so we need to handle that case
+  const result = analytics[0] || {
+    totalTasks: 0,
+    statusCounts: {
+      completed: 0,
+      pending: 0,
+      inProgress: 0,
+    },
+    priorityCounts: {
+      high: 0,
+      medium: 0,
+      low: 0,
+    },
+    overdueTasks: 0,
+    completionRate: 0,
+  };
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, result, "Task analytics fetched successfully"));
+});
+
+export {
+  createTask,
+  getAllTasks,
+  getTaskById,
+  updateTask,
+  deleteTask,
+  restoreTask,
+  getTaskAnalytics,
+};

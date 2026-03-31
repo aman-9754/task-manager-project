@@ -3,6 +3,7 @@ import {
   createTask,
   deleteTask,
   getAllTasks,
+  getTaskAnalytics,
   getTaskById,
   restoreTask,
   updateTask,
@@ -19,6 +20,16 @@ router.route("/").post(verifyJWT, createTask);
 // get all tasks of the logged in user
 router.route("/").get(verifyJWT, getAllTasks);
 
+// -----------------------------------------
+// ✅ specific routes first
+// restore a deleted task by id
+router.route("/:id/restore").patch(verifyJWT, restoreTask);
+
+// get task analytics for the logged in user
+router.get("/analytics", verifyJWT, getTaskAnalytics);
+// -----------------------------------------
+
+// ❗ dynamic routes last
 // get a single task by id
 router.route("/:id").get(verifyJWT, getTaskById);
 
@@ -27,10 +38,6 @@ router.route("/:id").patch(verifyJWT, updateTask);
 
 // delete a task by id
 router.route("/:id").delete(verifyJWT, deleteTask);
-
-// restore a deleted task by id
-router.route("/:id/restore").patch(verifyJWT, restoreTask);
-
 
 // default export -> so we can change the name of this router in the app.js file.
 export default router;
