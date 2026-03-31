@@ -5,7 +5,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
 // create a new task
-const createTask = asyncHandler(async (req, rse) => {
+const createTask = asyncHandler(async (req, res) => {
   const { title, description, status, dueDate, priority } = req.body;
 
   if (!title || title.trim() === "") {

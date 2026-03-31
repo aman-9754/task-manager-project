@@ -3,7 +3,9 @@ const app = express();
 import cors from "cors";
 import cookieParser from "cookie-parser";
 
+// routes import
 import userRouter from "./routes/user.routes.js";
+import taskRouter from "./routes/task.routes.js";
 
 app.use(
   cors({
@@ -20,8 +22,9 @@ app.use(cookieParser());
 
 // TODO: now we will import routes here and use them
 
-// routes
+// routes use
 app.use("/api/v1/users", userRouter);
+app.use("/api/v1/tasks", taskRouter);
 
 app.get("/", (req, res) => {
   res.send("Welcome to Task Manager API");
