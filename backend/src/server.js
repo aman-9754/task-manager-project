@@ -4,6 +4,12 @@ dotenv.config({ path: "./.env" });
 
 import connectDB from "./db/db.js";
 import { app } from "./app.js";
+import { connectCloudinary } from "./config/cloudinary.config.js";
+
+// console.log(process.env.CLOUDINARY_API_KEY)
+
+// ✅ initialize cloudinary AFTER env loads
+connectCloudinary();
 
 connectDB()
   .then(() => {

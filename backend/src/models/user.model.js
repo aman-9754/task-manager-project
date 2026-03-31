@@ -7,10 +7,10 @@ const userSchema = new mongoose.Schema(
     username: {
       type: String,
       required: true,
-      unique: true,   // already idnexed
+      unique: true, // already idnexed
       lowercase: true,
       trim: true,
-      index: 1,   // it is redundant
+      index: 1, // it is redundant
     },
     email: {
       type: String,
@@ -30,6 +30,10 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: [true, "Password is required"],
     },
+    avatar: {
+      type: String, // cloudinary url
+      required: true,
+    },
     refreshToken: {
       type: String,
       default: null,
@@ -38,21 +42,21 @@ const userSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-// hash password
-userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
-
-  this.password = await bcrypt.hash(this.password, 10);
-  next();
-});
-
-// userSchema.pre("save", async function () {
-//   if (!this.isModified("password")) {
-//     return;
-//   }
+// hash password (this give error -> TypeError: next is not a function)
+// userSchema.pre("save", async function (next) {
+//   if (!this.isModified("password")) return next();
 
 //   this.password = await bcrypt.hash(this.password, 10);
+//   next();
 // });
+
+userSchema.pre("save", async function () {
+  if (!this.isModified("password")) {
+    return;
+  }
+
+  this.password = await bcrypt.hash(this.password, 10);
+});
 
 // compare password
 userSchema.methods.isPasswordCorrect = async function (password) {
