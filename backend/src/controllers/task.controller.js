@@ -233,6 +233,38 @@ const deleteTask = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, null, "Task deleted successfully"));
 });
 
+// advanced controller
+// restore a deleted task (only if it belongs to the logged in user)
+const restoreTask = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  // validate mongo id
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw new ApiError(400, "Invalid task ID");
+  }
+
+  // find deleted task
+  const task = await Task.findOne({
+    _id: id,
+    user: req.user._id,
+    isDeleted: true, // important (only deleted tasks)
+  });
+
+  if (!task) {
+    throw new ApiError(404, "Task not found or not deleted");
+  }
+
+  // restore the task → set isDeleted to false
+  task.isDeleted = false;
+  await task.save();
+
+  // send response
+  return res
+    .status(200)
+    .json(new ApiResponse(200, task, "Task restored successfully"));
+});
 
 
-export { createTask, getAllTasks, getTaskById, updateTask, deleteTask };
+
+
+export { createTask, getAllTasks, getTaskById, updateTask, deleteTask, restoreTask };
