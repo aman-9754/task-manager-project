@@ -149,16 +149,6 @@ const getTaskById = asyncHandler(async (req, res) => {
 });
 
 // update a task (only if it belongs to the logged in user)
-// 🧠 WHAT WE WILL DO
-// Get taskId from params
-// Validate ID
-// Ensure task:
-// exists
-// belongs to user
-// not deleted
-// Update only provided fields (partial update)
-// Return updated task in response
-
 const updateTask = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { title, description, status, dueDate, priority } = req.body;
@@ -214,14 +204,6 @@ const updateTask = asyncHandler(async (req, res) => {
 });
 
 // delete a task (soft delete - only if it belongs to the logged in user)
-// 🧠 WHAT WE WILL DO
-// Validate task ID
-// Check:
-// task exists ✅
-// belongs to user ✅
-// not already deleted ✅
-// Instead of deleting → set: isDeleted: true
-
 const deleteTask = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
