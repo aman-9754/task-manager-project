@@ -4,18 +4,37 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
-// create a new task
+// create a new task without validation middleware
+// const createTask = asyncHandler(async (req, res) => {
+//   const { title, description, status, dueDate, priority } = req.body;
+
+//   if (!title || title.trim() === "") {
+//     throw new ApiError(400, "Title is required");
+//   }
+
+//   // create task
+//   const task = await Task.create({
+//     title: title.trim(),
+//     description: description ? description.trim() : "",
+//     status: status || "pending",
+//     dueDate: dueDate || null,
+//     priority: priority || "medium",
+//     user: req.user._id, // important
+//   });
+
+//   return res
+//     .status(201)
+//     .json(new ApiResponse(201, task, "Task created successfully"));
+// });
+
+// create a new task with validation middleware
 const createTask = asyncHandler(async (req, res) => {
   const { title, description, status, dueDate, priority } = req.body;
 
-  if (!title || title.trim() === "") {
-    throw new ApiError(400, "Title is required");
-  }
-
   // create task
   const task = await Task.create({
-    title: title.trim(),
-    description: description ? description.trim() : "",
+    title,
+    description,
     status: status || "pending",
     dueDate: dueDate || null,
     priority: priority || "medium",

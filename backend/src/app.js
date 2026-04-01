@@ -7,6 +7,9 @@ import cookieParser from "cookie-parser";
 import userRouter from "./routes/user.routes.js";
 import taskRouter from "./routes/task.routes.js";
 
+// error middleware import
+import { errorHandler } from "./middleware/error.middleware.js";
+
 app.use(
   cors({
     origin: process.env.CORS_ORIGIN,
@@ -20,14 +23,16 @@ app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 app.use(express.static("public"));
 app.use(cookieParser());
 
+app.get("/", (req, res) => {
+  res.send("Welcome to Task Manager API");
+});
+
 // TODO: now we will import routes here and use them
 
 // routes use
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/tasks", taskRouter);
 
-app.get("/", (req, res) => {
-  res.send("Welcome to Task Manager API");
-});
+app.use(errorHandler);
 
 export { app };

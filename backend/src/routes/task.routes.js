@@ -10,12 +10,14 @@ import {
 } from "../controllers/task.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
 
+import { createTaskValidator } from "../validators/task.validator.js";
+
 const router = Router();
 
 // all routes here are protected routes → we will verify JWT for all these routes
 
 // create a task
-router.route("/").post(verifyJWT, createTask);
+router.route("/").post(verifyJWT, createTaskValidator, createTask);
 
 // get all tasks of the logged in user
 router.route("/").get(verifyJWT, getAllTasks);
