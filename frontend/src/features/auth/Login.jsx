@@ -25,7 +25,7 @@ const Login = () => {
     try {
       const res = await loginUser(form);
 
-      console.log("Login.jsx res:", res);
+      // console.log("Login.jsx res:", res);
 
       // const { accessToken, user } = res.data.data;
       const { user } = res.data.data;
