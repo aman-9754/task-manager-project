@@ -3,6 +3,11 @@ const app = express();
 import cors from "cors";
 import cookieParser from "cookie-parser";
 
+// before it was in server.js but the app file load first (don't know why) that's why i write them here.
+import dotenv from "dotenv";
+dotenv.config({});
+// console.log(process.env.CORS_ORIGIN)
+
 // routes import
 import userRouter from "./routes/user.routes.js";
 import taskRouter from "./routes/task.routes.js";
