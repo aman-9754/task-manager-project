@@ -44,7 +44,7 @@ const Login = () => {
   };
 
   return (
-        <div className="flex items-center justify-center h-screen">
+    <div className="flex items-center justify-center h-screen">
       <form
         onSubmit={handleSubmit}
         className="bg-white p-6 rounded shadow-md w-96"
@@ -69,9 +69,7 @@ const Login = () => {
           required
         />
 
-        <button className="w-full bg-blue-500 text-white p-2">
-          Login
-        </button>
+        <button className="w-full bg-blue-500 text-white p-2">Login</button>
 
         <p className="mt-3 text-sm">
           Don't have an account?{" "}
