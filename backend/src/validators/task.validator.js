@@ -114,6 +114,8 @@ const getAllTasksQueryValidator = (req, res, next) => {
     order: Joi.string().valid("asc", "desc").optional(),
   });
 
+  // console.log("req.query : ", req.query)
+
   const { error, value } = schema.validate(req.query, { abortEarly: false });
 
   if (error) {
@@ -122,10 +124,19 @@ const getAllTasksQueryValidator = (req, res, next) => {
     );
     return next(new ApiError(400, "Validation failed", errorMessages));
   }
+  // console.log("value : ", value)
 
-  req.query = value;
+  // req.query is read-only (getter only)
+  // req.query = value;
+
+  Object.assign(req.query, value);
 
   next();
 };
 
-export { createTaskValidator, taskIdParamValidator, updateTaskValidator, getAllTasksQueryValidator };
+export {
+  createTaskValidator,
+  taskIdParamValidator,
+  updateTaskValidator,
+  getAllTasksQueryValidator,
+};
