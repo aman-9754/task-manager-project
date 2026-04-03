@@ -12,6 +12,7 @@ import TaskList from "../features/task/TaskList";
 import FilterBar from "../features/task/FilterBar";
 import Analytics from "../features/task/Analytics";
 import { getTaskAnalytics } from "../api/taskApi";
+import toast from "react-hot-toast";
 
 // const Dashboard = () => {
 //   return <div>this is dashboard page.</div>;
@@ -50,9 +51,12 @@ const Dashboard = () => {
       // UI update
       setTasks((prev) => [res.data.data, ...prev]);
       // setTasks((prev) => [res.data.data.tasks, ...prev]);  // this is not required here, print the res and then decide what to write
+
+      toast.success("Task Created Successfully!");
       fetchAnalytics();
     } catch (error) {
-      console.error("Create Task Error : ", error);
+      // console.error("Create Task Error : ", error);
+      toast.error("Failed to create task!");
     }
   };
 
@@ -69,9 +73,11 @@ const Dashboard = () => {
       // });
 
       setTasks((prev) => prev.map((t) => (t._id === id ? res.data.data : t)));
+      toast.success("Task Updated Successfully!");
       fetchAnalytics();
     } catch (error) {
-      console.error("Update Task Error : ", error);
+      // console.error("Update Task Error : ", error);
+      toast.error("Failed to update task!");
     }
   };
 
@@ -80,9 +86,11 @@ const Dashboard = () => {
     try {
       await deleteTask(id);
       setTasks((prev) => prev.filter((t) => t._id !== id));
+      toast.success("Task Deleted Successfully!");
       fetchAnalytics();
     } catch (error) {
-      console.error("Delete Task Error:", err);
+      // console.error("Delete Task Error:", err);
+      toast.error("Failed to delete task!");
     }
   };
 
