@@ -1,6 +1,8 @@
 # Node modules
 node_modules/
 
+info-setup.txt
+
 # Environment variables
 .env
 .env.*

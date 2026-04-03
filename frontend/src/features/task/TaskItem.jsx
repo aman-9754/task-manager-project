@@ -8,7 +8,7 @@ const TaskItem = ({ task, onDelete, onUpdate }) => {
 
   return (
     // <div className="bg-gray-100 p-4 rounded shadow flex justify-between items-center">
-    <div className="bg-white p-4 rounded shadow flex justify-between items-center">
+    <div className="bg-white p-4 rounded shadow flex justify-between items-center gap-3">
       <div>
         <h3 className="font-bold"> {task.title} </h3>
         <p className="text-gray-600">{task.description}</p>

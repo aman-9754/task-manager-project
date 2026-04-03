@@ -9,6 +9,9 @@ import {
 
 import TaskForm from "../features/task/TaskForm";
 import TaskList from "../features/task/TaskList";
+import FilterBar from "../features/task/FilterBar";
+import Analytics from "../features/task/Analytics";
+import { getTaskAnalytics } from "../api/taskApi";
 
 // const Dashboard = () => {
 //   return <div>this is dashboard page.</div>;
@@ -17,6 +20,7 @@ import TaskList from "../features/task/TaskList";
 const Dashboard = () => {
   const [tasks, setTasks] = useState([]);
   const [filters, setFilters] = useState({});
+  const [analytics, setAnalytics] = useState(null);
 
   // fetch tasks
   const fetchTasks = async (query = {}) => {
@@ -46,6 +50,7 @@ const Dashboard = () => {
       // UI update
       setTasks((prev) => [res.data.data, ...prev]);
       // setTasks((prev) => [res.data.data.tasks, ...prev]);  // this is not required here, print the res and then decide what to write
+      fetchAnalytics();
     } catch (error) {
       console.error("Create Task Error : ", error);
     }
@@ -64,6 +69,7 @@ const Dashboard = () => {
       // });
 
       setTasks((prev) => prev.map((t) => (t._id === id ? res.data.data : t)));
+      fetchAnalytics();
     } catch (error) {
       console.error("Update Task Error : ", error);
     }
@@ -74,8 +80,19 @@ const Dashboard = () => {
     try {
       await deleteTask(id);
       setTasks((prev) => prev.filter((t) => t._id !== id));
+      fetchAnalytics();
     } catch (error) {
       console.error("Delete Task Error:", err);
+    }
+  };
+
+  const fetchAnalytics = async () => {
+    try {
+      const res = await getTaskAnalytics();
+      // console.log(res.data.data);
+      setAnalytics(res.data.data);
+    } catch (error) {
+      console.error("Analtics Error :", error);
     }
   };
 
@@ -85,6 +102,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchTasks(filters);
+    fetchAnalytics();
   }, [filters]);
 
   return (
@@ -93,7 +111,19 @@ const Dashboard = () => {
 
       <TaskForm onCreate={handleCreate} />
 
-      <TaskList tasks={tasks} onDelete={handleDelete} onUpdate={handleUpdate} />
+      <Analytics analytics={analytics} />
+
+      <div className="bg-white p-4 rounded  shadow mb-6 ">
+        {/* ADD FILTER HERE */}
+        <h1 className="text-xl mb-4 font-semibold">All Tasks</h1>
+        <FilterBar filters={filters} setFilters={setFilters} />
+
+        <TaskList
+          tasks={tasks}
+          onDelete={handleDelete}
+          onUpdate={handleUpdate}
+        />
+      </div>
     </div>
   );
 };
