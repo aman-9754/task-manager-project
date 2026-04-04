@@ -1,15 +1,22 @@
 import { useState } from "react";
 
 const TaskForm = ({ onCreate }) => {
+  const [loading, setLoading] = useState(false);
+
   const [form, setForm] = useState({
     title: "",
     description: "",
     priority: "medium",
   });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onCreate(form);
+
+    setLoading(true);
+
+    await onCreate(form);
+
+    setLoading(false);
 
     setForm({
       title: "",
@@ -51,7 +58,8 @@ const TaskForm = ({ onCreate }) => {
       </select>
 
       <button className="bg-blue-500 text-white px-4 py-2 rounded cursor-pointer">
-        Add Task
+        {/* Add Task */}
+        {loading ? "Adding..." : "Add Task"}
       </button>
     </form>
   );

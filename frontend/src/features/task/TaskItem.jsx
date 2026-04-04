@@ -6,9 +6,15 @@ const TaskItem = ({ task, onDelete, onUpdate }) => {
     if (task.priority === "medium") return "text-yellow-500";
   };
 
+  const handleDeleteTaskClick = () => {
+    if (confirm("Are you sure you want to delete this task?")) {
+      onDelete(task._id);
+    }
+  };
+
   return (
     // <div className="bg-gray-100 p-4 rounded shadow flex justify-between items-center">
-    <div className="bg-white p-4 rounded shadow flex justify-between items-center gap-3">
+    <div className="bg-white p-4 rounded shadow flex justify-between items-center gap-3 hover:shadow-md transition">
       <div>
         <h3 className="font-bold"> {task.title} </h3>
         <p className="text-gray-600">{task.description}</p>
@@ -30,7 +36,7 @@ const TaskItem = ({ task, onDelete, onUpdate }) => {
                 status: "completed",
               })
             }
-            className="bg-green-500 text-white px-2 rounded"
+            className="bg-green-500 text-white px-2 rounded cursor-pointer"
           >
             Done
           </button>
@@ -38,7 +44,8 @@ const TaskItem = ({ task, onDelete, onUpdate }) => {
 
         <button
           className="bg-red-500 text-white px-2 rounded h-8 cursor-pointer"
-          onClick={() => onDelete(task._id)}
+          // onClick={() => onDelete(task._id)}
+          onClick={handleDeleteTaskClick}
         >
           {" "}
           Delete

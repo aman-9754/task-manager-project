@@ -22,10 +22,13 @@ const Dashboard = () => {
   const [tasks, setTasks] = useState([]);
   const [filters, setFilters] = useState({});
   const [analytics, setAnalytics] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   // fetch tasks
   const fetchTasks = async (query = {}) => {
     try {
+      setLoading(true);
+
       // console.log("aman1");
       const res = await getAllTasks(query);
       // console.log(res);
@@ -40,7 +43,10 @@ const Dashboard = () => {
       setTasks(res.data.data.tasks); // we have to write this
     } catch (err) {
       // console.log("aman3");
-      console.error("Fetch All Tasks Error :", err);
+      // console.error("Fetch All Tasks Error :", err);
+      toast.error("Failed to fetch tasks!");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -123,14 +129,26 @@ const Dashboard = () => {
 
       <div className="bg-white p-4 rounded  shadow mb-6 ">
         {/* ADD FILTER HERE */}
+
         <h1 className="text-xl mb-4 font-semibold">All Tasks</h1>
+
         <FilterBar filters={filters} setFilters={setFilters} />
 
-        <TaskList
+        {/* <TaskList
           tasks={tasks}
           onDelete={handleDelete}
           onUpdate={handleUpdate}
-        />
+        /> */}
+
+        {loading ? (
+          <p className="text-center"> Loading Tasks...</p>
+        ) : (
+          <TaskList
+            tasks={tasks}
+            onDelete={handleDelete}
+            onUpdate={handleUpdate}
+          />
+        )}
       </div>
     </div>
   );
