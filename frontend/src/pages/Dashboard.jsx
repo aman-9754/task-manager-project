@@ -13,6 +13,7 @@ import FilterBar from "../features/task/FilterBar";
 import Analytics from "../features/task/Analytics";
 import { getTaskAnalytics } from "../api/taskApi";
 import toast from "react-hot-toast";
+import Pagination from "../features/task/Pagination";
 
 // const Dashboard = () => {
 //   return <div>this is dashboard page.</div>;
@@ -24,23 +25,35 @@ const Dashboard = () => {
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  const [pagination, setPagination] = useState({
+    page: 1, // current page
+    limit: 5, // tasks per page
+    totalPages: 1, // from backend
+  });
+
   // fetch tasks
   const fetchTasks = async (query = {}) => {
     try {
       setLoading(true);
 
-      // console.log("aman1");
-      const res = await getAllTasks(query);
+      // const res = await getAllTasks(query);
       // console.log(res);
 
-      // console.log("aman2");
-      // console.log("res.data.data: ", res.data.data);
-      // console.log("res.data.data.tasks: ", res.data.data.tasks);
+      const res = await getAllTasks({
+        ...query,
+        page: pagination.page,
+        limit: pagination.limit,
+      });
 
-      // setTasks(res.data.data);   // this is wrong
-      // this same problem has arrived in below all function also because everywhere we have sed res.data.data but actually it is res.data.data.tasks
+      const data = res.data.data;
+      setTasks(data.tasks);
+      // setTasks(res.data.data.tasks); // we have to write this
 
-      setTasks(res.data.data.tasks); // we have to write this
+      // update pagination info
+      setPagination((prev) => ({
+        ...prev,
+        totalPages: data.totalPages,
+      }));
     } catch (err) {
       // console.log("aman3");
       // console.error("Fetch All Tasks Error :", err);
@@ -51,12 +64,34 @@ const Dashboard = () => {
   };
 
   // create task
+  // const handleCreate = async (data) => {
+  //   try {
+  //     const res = await createTask(data);
+  //     // UI update
+  //     setTasks((prev) => [res.data.data, ...prev]);
+  //     // setTasks((prev) => [res.data.data.tasks, ...prev]);  // this is not required here, print the res and then decide what to write
+
+  //     toast.success("Task Created Successfully!");
+  //     fetchAnalytics();
+  //   } catch (error) {
+  //     // console.error("Create Task Error : ", error);
+  //     toast.error("Failed to create task!");
+  //   }
+  // };
+
   const handleCreate = async (data) => {
     try {
-      const res = await createTask(data);
-      // UI update
-      setTasks((prev) => [res.data.data, ...prev]);
-      // setTasks((prev) => [res.data.data.tasks, ...prev]);  // this is not required here, print the res and then decide what to write
+      await createTask(data);
+
+      // move to the first page (new task will be there)
+      setPagination((prev) => ({
+        ...prev,
+        page: 1,
+      }));
+
+      // we dont need to manually do UI update
+      
+      // fetchTasks(); // enven though this is also not required becuase when pagination changes, the useEffect automatically fetch all tasks from backend
 
       toast.success("Task Created Successfully!");
       fetchAnalytics();
@@ -110,14 +145,49 @@ const Dashboard = () => {
     }
   };
 
+  const handleFilterChange = (name, value) => {
+    // clear all filters
+    if (name === "clear") {
+      setFilters({});
+      setPagination((prev) => ({ ...prev, page: 1 }));
+      return;
+    }
+
+    setFilters((prev) => {
+      let updated;
+
+      // remove filter if empty
+      if (!value) {
+        updated = { ...prev };
+        delete updated[name];
+      } else {
+        updated = {
+          ...prev,
+          [name]: value,
+        };
+      }
+
+      return updated;
+    });
+
+    // reset page
+    setPagination((prev) => ({
+      ...prev,
+      page: 1,
+    }));
+  };
+
   // useEffect(() => {
   //   fetchTasks();
   // }, []);
 
   useEffect(() => {
-    fetchTasks(filters);
     fetchAnalytics();
   }, [filters]);
+
+  useEffect(() => {
+    fetchTasks(filters);
+  }, [filters, pagination.page]);
 
   return (
     <div className="max-w-3xl mx-auto p-6">
@@ -132,7 +202,7 @@ const Dashboard = () => {
 
         <h1 className="text-xl mb-4 font-semibold">All Tasks</h1>
 
-        <FilterBar filters={filters} setFilters={setFilters} />
+        <FilterBar filters={filters} onFilterChange={handleFilterChange} />
 
         {/* <TaskList
           tasks={tasks}
@@ -143,11 +213,14 @@ const Dashboard = () => {
         {loading ? (
           <p className="text-center"> Loading Tasks...</p>
         ) : (
-          <TaskList
-            tasks={tasks}
-            onDelete={handleDelete}
-            onUpdate={handleUpdate}
-          />
+          <>
+            <TaskList
+              tasks={tasks}
+              onDelete={handleDelete}
+              onUpdate={handleUpdate}
+            />
+            <Pagination pagination={pagination} setPagination={setPagination} />
+          </>
         )}
       </div>
     </div>

@@ -1,31 +1,12 @@
-const FilterBar = ({ filters, setFilters }) => {
-  // handle change for both dropdowns
+const FilterBar = ({ filters, onFilterChange }) => {
   const handleChange = (e) => {
     const { name, value } = e.target;
-
-    // setFilters((prev) => ({ ...prev, [name]: value }));
-    // console.log(filters);
-    // console.log(value);
-
-    setFilters((prev) => {
-      // if empty -> remove filter
-
-      if (!value) {
-        const updated = { ...prev };
-        delete updated[name];
-        return updated;
-      }
-
-      return {
-        ...prev,
-        [name]: value,
-      };
-    });
+    onFilterChange(name, value);
   };
 
   // clear all filters
   const clearFilters = () => {
-    setFilters({});
+    onFilterChange("clear");
   };
 
   return (
