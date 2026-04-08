@@ -57,6 +57,7 @@ const getAllTasks = asyncHandler(async (req, res) => {
     search,
     sortBy = "createdAt",
     sortType = "desc",
+    isDeleted,
   } = req.query;
 
   // 🔹 convert to numbers
@@ -73,7 +74,12 @@ const getAllTasks = asyncHandler(async (req, res) => {
   const query = {
     user: req.user._id, // users can only see their own tasks
     isDeleted: false,
+    // isDeleted: isDeleted === "true", // this might cause an issue
   };
+
+  if (isDeleted !== undefined) {
+    query.isDeleted = isDeleted === "true";
+  }
 
   // 🔹 filtering
   if (status) query.status = status;

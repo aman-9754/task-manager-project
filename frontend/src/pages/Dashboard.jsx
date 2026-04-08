@@ -5,15 +5,17 @@ import {
   deleteTask,
   getAllTasks,
   updateTask,
+  getTaskAnalytics,
+  restoreTask,
 } from "../api/taskApi";
 
 import TaskForm from "../features/task/TaskForm";
 import TaskList from "../features/task/TaskList";
 import FilterBar from "../features/task/FilterBar";
 import Analytics from "../features/task/Analytics";
-import { getTaskAnalytics } from "../api/taskApi";
 import toast from "react-hot-toast";
 import Pagination from "../features/task/Pagination";
+import DeletedTaskList from "../features/task/DeletedTaskList";
 
 // const Dashboard = () => {
 //   return <div>this is dashboard page.</div>;
@@ -24,11 +26,17 @@ const Dashboard = () => {
   const [filters, setFilters] = useState({});
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(false);
-
   const [pagination, setPagination] = useState({
     page: 1, // current page
     limit: 5, // tasks per page
     totalPages: 1, // from backend
+  });
+
+  const [deletedTasks, setDeletedTasks] = useState([]);
+  const [deletedPagination, setDeletedPagination] = useState({
+    page: 1,
+    limit: 5,
+    totalPages: 1,
   });
 
   // fetch tasks
@@ -63,6 +71,28 @@ const Dashboard = () => {
     }
   };
 
+  // fetch only deleted tasks (only where task.isDeleted = false)
+  const fetchDeletedTasks = async () => {
+    try {
+      const res = await getAllTasks({
+        isDeleted: true,
+        page: deletedPagination.page,
+        limit: deletedPagination.limit,
+      });
+
+      const data = res.data.data;
+
+      setDeletedTasks(data.tasks);
+
+      setDeletedPagination((prev) => ({
+        ...prev,
+        totalPages: data.totalPages,
+      }));
+    } catch (err) {
+      toast.error("Failed to fetch deleted tasks");
+    }
+  };
+
   // create task
   // const handleCreate = async (data) => {
   //   try {
@@ -90,7 +120,7 @@ const Dashboard = () => {
       }));
 
       // we dont need to manually do UI update
-      
+
       // fetchTasks(); // enven though this is also not required becuase when pagination changes, the useEffect automatically fetch all tasks from backend
 
       toast.success("Task Created Successfully!");
@@ -127,8 +157,12 @@ const Dashboard = () => {
     try {
       await deleteTask(id);
       setTasks((prev) => prev.filter((t) => t._id !== id));
-      toast.success("Task Deleted Successfully!");
+
+      // toast.success("Task Deleted Successfully!");
+      toast.success("Task moved to trash!");
+
       fetchAnalytics();
+      fetchDeletedTasks(); // updated deleted task list
     } catch (error) {
       // console.error("Delete Task Error:", err);
       toast.error("Failed to delete task!");
@@ -177,6 +211,20 @@ const Dashboard = () => {
     }));
   };
 
+  const handleRestore = async (id) => {
+    try {
+      await restoreTask(id);
+
+      toast.success("Task restored successfully!");
+
+      fetchTasks(filters); // back to active
+      fetchDeletedTasks(); // remove from deleted list
+      fetchAnalytics(); // update states
+    } catch (err) {
+      toast.error("Failed to Restore the task!");
+    }
+  };
+
   // useEffect(() => {
   //   fetchTasks();
   // }, []);
@@ -188,6 +236,10 @@ const Dashboard = () => {
   useEffect(() => {
     fetchTasks(filters);
   }, [filters, pagination.page]);
+
+  useEffect(() => {
+    fetchDeletedTasks();
+  }, [deletedPagination.page]);
 
   return (
     <div className="max-w-3xl mx-auto p-6">
@@ -220,6 +272,22 @@ const Dashboard = () => {
               onUpdate={handleUpdate}
             />
             <Pagination pagination={pagination} setPagination={setPagination} />
+          </>
+        )}
+      </div>
+
+      <div className="bg-white p-4 rounded shadow mt-6">
+        <h2 className="text-xl font-semibold mb-3">Deleted Tasks</h2>
+
+        {deletedTasks.length === 0 ? (
+          <p className="text-gray-500 text-center"> No deleted tasks</p>
+        ) : (
+          <>
+            <DeletedTaskList tasks={deletedTasks} onRestore={handleRestore} />
+            <Pagination
+              pagination={deletedPagination}
+              setPagination={setDeletedPagination}
+            />
           </>
         )}
       </div>

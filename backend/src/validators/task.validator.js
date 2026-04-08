@@ -112,6 +112,7 @@ const getAllTasksQueryValidator = (req, res, next) => {
     priority: Joi.string().valid("low", "medium", "high").optional(),
     sortBy: Joi.string().valid("createdAt", "dueDate", "priority").optional(),
     order: Joi.string().valid("asc", "desc").optional(),
+    isDeleted: Joi.boolean(),
   });
 
   // console.log("req.query : ", req.query)
