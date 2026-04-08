@@ -96,11 +96,17 @@ const loginUser = asyncHandler(async (req, res) => {
   // send the token in cookies
   // send the response for successfull login
 
-  const { username, email, password } = req.body;
-  // console.log(email);
+  // const { username, email, password } = req.body;
+  // // console.log(email);
 
-  if (!username && !email)
-    throw new ApiError(400, "username or email required.");
+  // if (!username && !email)
+  //   throw new ApiError(400, "username or email required.");
+
+  const { identifier, password } = req.body;
+
+  if (!identifier || !identifier?.trim()) {
+    throw new ApiError(400, "Username or Email required.");
+  }
 
   if (!password) {
     throw new ApiError(400, "Password is required");
@@ -109,8 +115,10 @@ const loginUser = asyncHandler(async (req, res) => {
   // const user = await User.findOne({ $or: [{ username }, { email }] });
   const user = await User.findOne({
     $or: [
-      { username: username?.toLowerCase() },
-      { email: email?.toLowerCase() },
+      // { username: username?.toLowerCase() },
+      // { email: email?.toLowerCase() },
+      { username: identifier?.trim().toLowerCase() },
+      { email: identifier?.trim().toLowerCase() },
     ],
   });
 

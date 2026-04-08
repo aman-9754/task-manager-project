@@ -5,7 +5,8 @@ import { loginUser } from "../../api/userApi";
 
 const Login = () => {
   const [form, setForm] = useState({
-    email: "",
+    // email: "",
+    identifier: "",
     password: "",
   });
 
@@ -52,9 +53,10 @@ const Login = () => {
         <h2 className="text-xl font-bold mb-4">Login</h2>
 
         <input
-          type="email"
-          name="email"
-          placeholder="Email"
+          // type="email"
+          type="text"
+          name="identifier"
+          placeholder="UserName or Email"
           className="w-full mb-3 p-2 border"
           onChange={handleChange}
           required
