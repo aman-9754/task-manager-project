@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 import {
   createTask,
@@ -16,12 +17,11 @@ import Analytics from "../features/task/Analytics";
 import toast from "react-hot-toast";
 import Pagination from "../features/task/Pagination";
 import DeletedTaskList from "../features/task/DeletedTaskList";
-
-// const Dashboard = () => {
-//   return <div>this is dashboard page.</div>;
-// };
+import { useAuth } from "../context/AuthContext";
 
 const Dashboard = () => {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [tasks, setTasks] = useState([]);
   const [filters, setFilters] = useState({});
   const [analytics, setAnalytics] = useState(null);
@@ -38,6 +38,16 @@ const Dashboard = () => {
     limit: 5,
     totalPages: 1,
   });
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast.success("Logged out successfully");
+      navigate("/login", { replace: true });
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Logout failed");
+    }
+  };
 
   // fetch tasks
   const fetchTasks = async (query = {}) => {
@@ -111,7 +121,8 @@ const Dashboard = () => {
 
   const handleCreate = async (data) => {
     try {
-      await createTask(data);
+      const res = await createTask(data);
+      const createdTask = res.data.data;
 
       // move to the first page (new task will be there)
       setPagination((prev) => ({
@@ -119,9 +130,14 @@ const Dashboard = () => {
         page: 1,
       }));
 
-      // we dont need to manually do UI update
+      setTasks((prev) => {
+        const nextTasks = [
+          createdTask,
+          ...prev.filter((task) => task._id !== createdTask._id),
+        ];
 
-      // fetchTasks(); // enven though this is also not required becuase when pagination changes, the useEffect automatically fetch all tasks from backend
+        return nextTasks.slice(0, pagination.limit);
+      });
 
       toast.success("Task Created Successfully!");
       fetchAnalytics();
@@ -242,28 +258,61 @@ const Dashboard = () => {
   }, [deletedPagination.page]);
 
   return (
-    <div className="max-w-3xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-4">Dashboard</h1>
+    <div className="relative mx-auto max-w-6xl px-4 py-6 text-slate-100 sm:px-6 lg:px-8">
+      <div className="absolute left-0 top-16 h-64 w-64 rounded-full bg-sky-500/10 blur-3xl" />
+      <div className="absolute right-0 top-36 h-72 w-72 rounded-full bg-emerald-500/10 blur-3xl" />
+
+      <div className="relative mb-6 overflow-hidden rounded-4xl border border-white/10 bg-slate-950/55 p-6 shadow-2xl backdrop-blur">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-xs font-medium uppercase tracking-[0.35em] text-sky-200/70">
+              Task Manager
+            </p>
+            <h1 className="mt-2 text-3xl font-black text-white sm:text-4xl">
+              Dashboard
+            </h1>
+            <p className="mt-2 max-w-xl text-sm text-slate-300">
+              Welcome back{user?.fullName ? `, ${user.fullName}` : ""}.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            <Link
+              to="/profile"
+              className="inline-flex items-center justify-center rounded-full border border-white/15 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10"
+            >
+              Profile
+            </Link>
+            <button
+              onClick={handleLogout}
+              className="inline-flex items-center justify-center rounded-full bg-rose-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-400"
+            >
+              Logout
+            </button>
+          </div>
+        </div>
+      </div>
 
       <TaskForm onCreate={handleCreate} />
 
       <Analytics analytics={analytics} />
 
-      <div className="bg-white p-4 rounded  shadow mb-6 ">
-        {/* ADD FILTER HERE */}
-
-        <h1 className="text-xl mb-4 font-semibold">All Tasks</h1>
+      <div className="mb-6 rounded-[1.75rem] border border-white/10 bg-slate-950/70 p-5 text-slate-100 shadow-2xl shadow-slate-950/20">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div>
+            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
+              Active work
+            </p>
+            <h1 className="mt-2 text-2xl font-bold text-white">All Tasks</h1>
+          </div>
+        </div>
 
         <FilterBar filters={filters} onFilterChange={handleFilterChange} />
 
-        {/* <TaskList
-          tasks={tasks}
-          onDelete={handleDelete}
-          onUpdate={handleUpdate}
-        /> */}
-
         {loading ? (
-          <p className="text-center"> Loading Tasks...</p>
+          <p className="py-10 text-center text-sm text-slate-400">
+            Loading tasks...
+          </p>
         ) : (
           <>
             <TaskList
@@ -276,11 +325,20 @@ const Dashboard = () => {
         )}
       </div>
 
-      <div className="bg-white p-4 rounded shadow mt-6">
-        <h2 className="text-xl font-semibold mb-3">Deleted Tasks</h2>
+      <div className="rounded-[1.75rem] border border-white/10 bg-slate-950/70 p-5 text-slate-100 shadow-2xl shadow-slate-950/20">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div>
+            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
+              Trash
+            </p>
+            <h2 className="mt-2 text-2xl font-bold text-white">
+              Deleted Tasks
+            </h2>
+          </div>
+        </div>
 
         {deletedTasks.length === 0 ? (
-          <p className="text-gray-500 text-center"> No deleted tasks</p>
+          <p className="py-6 text-center text-sm text-slate-400">No deleted tasks</p>
         ) : (
           <>
             <DeletedTaskList tasks={deletedTasks} onRestore={handleRestore} />

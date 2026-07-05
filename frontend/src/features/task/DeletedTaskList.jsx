@@ -1,20 +1,23 @@
 const DeletedTaskList = ({ tasks, onRestore }) => {
   if (!tasks || tasks.length === 0) {
-    return <p className="text-gray-500 text-center">No deleted tasks</p>;
+    return <p className="py-4 text-center text-sm text-slate-400">No deleted tasks</p>;
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       {tasks.map((task) => (
         <div
           key={task._id}
-          className="bg-gray-100 p-3 rounded flex justify-between"
+          className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-slate-900/70 p-4 shadow-lg shadow-slate-950/10"
         >
-          <span>{task.title}</span>
+          <div>
+            <p className="font-semibold text-white">{task.title}</p>
+            <p className="text-xs text-slate-400">Moved to trash</p>
+          </div>
 
           <button
             onClick={() => onRestore(task._id)}
-            className="bg-green-500 text-white px-2 py-1 rounded cursor-pointer"
+            className="rounded-full bg-emerald-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-400"
           >
             Restore
           </button>

@@ -2,6 +2,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Login from "../features/auth/Login";
 import Register from "../features/auth/Register";
 import Dashboard from "../pages/Dashboard";
+import Profile from "../pages/Profile";
+import NotFound from "../pages/NotFount";
 import ProtectedRoute from "./ProtectedRoute";
 
 const AppRoutes = () => {
@@ -23,6 +25,17 @@ const AppRoutes = () => {
             </ProtectedRoute>
           }
         />
+
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
   );

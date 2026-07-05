@@ -5,8 +5,7 @@ const TaskList = ({ tasks, onDelete, onUpdate }) => {
   // if (!tasks.length) {  // error is fixed but the below one is more safe
   if (!tasks || !tasks.length) {
     return (
-      <p className="text-center text-gray-500">
-        {" "}
+      <p className="py-6 text-center text-sm text-slate-400">
         No tasks yet. Add your first task.
       </p>
     );

@@ -8,6 +8,9 @@ import jwt from "jsonwebtoken";
 const registerUser = asyncHandler(async (req, res) => {
   const { username, fullName, email, password } = req.body;
 
+  const normalizedUsername = username?.trim().toLowerCase();
+  const normalizedEmail = email?.trim().toLowerCase();
+
   if (
     [fullName, email, username, password].some(
       (field) => !field || field.trim() === "",
@@ -19,7 +22,7 @@ const registerUser = asyncHandler(async (req, res) => {
   //   const existedUser = await User.findOne({ $or: [{ username }, { email }] });
 
   const existedUser = await User.findOne({
-    $or: [{ username: username.toLowerCase() }, { email: email.toLowerCase() }],
+    $or: [{ username: normalizedUsername }, { email: normalizedEmail }],
   });
 
   if (existedUser) {
@@ -40,19 +43,19 @@ const registerUser = asyncHandler(async (req, res) => {
   }
   const user = await User.create({
     fullName,
-    username: username.toLowerCase(),
-    email: email.toLowerCase(),
+    username: normalizedUsername,
+    email: normalizedEmail,
     password,
     avatar: avatarUpload.url,
   });
 
-  //   console.log("user:", user);
+  console.log("user:", user);
 
   const createdUser = await User.findById(user._id).select(
     "-password -refreshToken",
   );
 
-  //   console.log("createdUser : ", createdUser);
+  console.log("createdUser : ", createdUser);
 
   if (!createdUser) {
     throw new ApiError(500, "User registration failed");
@@ -187,7 +190,8 @@ const logoutUser = asyncHandler(async (req, res) => {
       },
     },
     {
-      new: true,
+      // new: true,
+      returnDocument: "after",
     },
   );
 
@@ -353,7 +357,10 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
         // email: email  // both are correct ES6 syntax
       },
     },
-    { new: true },
+    {
+      // new: true
+      returnDocument: "after",
+    },
   ).select("-password -refreshToken"); // by me
 
   if (!updatedUser) {
@@ -401,7 +408,8 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
       },
     },
     {
-      new: true,
+      // new: true,
+      returnDocument:"after"
     },
   ).select("-password -refreshToken");
 
