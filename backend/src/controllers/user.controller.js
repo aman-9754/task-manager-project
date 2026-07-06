@@ -19,6 +19,10 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new ApiError(400, "All fields are required");
   }
 
+  // first validate and then normalize
+  // const normalizedUsername = username?.trim().toLowerCase();
+  // const normalizedEmail = email?.trim().toLowerCase();
+
   //   const existedUser = await User.findOne({ $or: [{ username }, { email }] });
 
   const existedUser = await User.findOne({
@@ -86,6 +90,11 @@ const generateAccessAndRefreshTokens = async (userId) => {
 
     return { accessToken, refreshToken };
   } catch (error) {
+    // this line is added while revision
+    if (error instanceof ApiError) {
+      throw error;
+    }
+
     throw new ApiError(500, error?.message || "Token generation failed");
   }
 };
@@ -151,6 +160,7 @@ const loginUser = asyncHandler(async (req, res) => {
   const options = {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
+    // sameSite:"strict"
   };
 
   return res
@@ -285,9 +295,9 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
     throw new ApiError(400, "New password must be different");
   }
 
-  // if (newPassword.length < 6) {
-  //   throw new ApiError(400, "Password must be at least 6 characters long");
-  // }
+  if (newPassword.length < 6) {
+    throw new ApiError(400, "Password must be at least 6 characters long");
+  }
 
   const user = await User.findById(req.user?._id);
 
@@ -301,18 +311,42 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
     throw new ApiError(401, "Invalid old password");
   }
 
-  user.password = newPassword;
+  // user.password = newPassword;
 
-  // TODO : understand this solved this
-  // 🔥 invalidate old sessions
-  // user.refreshToken = null;
+  // // TODO : understand this solved this
+  // // 🔥 invalidate old sessions
+  // // user.refreshToken = null;
+
+  // // the pre middleware automatically bcrypt the password and stored in the database.
+  // await user.save({ validateBeforeSave: false });
+
+  // return res
+  //   .status(200)
+  //   .json(new ApiResponse(200, {}, "Password changed successfully"));
+
+  // Now the user is logged out immediately, when he changed the password, (many companies do this also.)
+  user.password = newPassword;
+  user.refreshToken = null;
 
   // the pre middleware automatically bcrypt the password and stored in the database.
   await user.save({ validateBeforeSave: false });
 
+  const options = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+  };
+
   return res
+    .clearCookie("accessToken", options)
+    .clearCookie("refreshToken", options)
     .status(200)
-    .json(new ApiResponse(200, {}, "Password changed successfully"));
+    .json(
+      new ApiResponse(
+        200,
+        {},
+        "Password changed successfully. Please log in again with your new password.",
+      ),
+    );
 });
 
 const getCurrentUser = asyncHandler(async (req, res) => {
@@ -345,7 +379,7 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
   });
 
   if (existingUser && existingUser._id.toString() !== req.user._id.toString()) {
-    throw new ApiError(400, "Email already in use");
+    throw new ApiError(409, "Email already in use");
   }
 
   const updatedUser = await User.findByIdAndUpdate(
@@ -409,7 +443,7 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
     },
     {
       // new: true,
-      returnDocument:"after"
+      returnDocument: "after",
     },
   ).select("-password -refreshToken");
 

@@ -46,6 +46,6 @@ const taskSchema = new mongoose.Schema(
 );
 
 // add this separately
-taskSchema.index({ user: 1, status: 1 });
+taskSchema.index({ user: 1, status: 1 }); // Compound Index
 
 export const Task = mongoose.model("Task", taskSchema);

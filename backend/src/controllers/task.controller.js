@@ -210,31 +210,65 @@ const updateTask = asyncHandler(async (req, res) => {
 });
 
 // delete a task (soft delete - only if it belongs to the logged in user)
+// const deleteTask = asyncHandler(async (req, res) => {
+//   const { id } = req.params;
+
+//   // validate mongo id
+//   if (!mongoose.Types.ObjectId.isValid(id)) {
+//     throw new ApiError(400, "Invalid task id");
+//   }
+
+//   // find the task (ownership + not deleted)
+//   const task = await Task.findOne({
+//     _id: id,
+//     user: req.user._id,
+//     isDeleted: false,
+//   });
+
+//   // if task not found or doesn't belong to the user
+//   if (!task) {
+//     throw new ApiError(404, "Task not found");
+//   }
+
+//   // soft delete → set isDeleted to true
+//   task.isDeleted = true;
+//   await task.save();
+
+//   // send response
+//   return res
+//     .status(200)
+//     .json(new ApiResponse(200, null, "Task deleted successfully"));
+// });
+
+// by gpt
 const deleteTask = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
-  // validate mongo id
+  // validate mongo id (already done in the validator)
   if (!mongoose.Types.ObjectId.isValid(id)) {
     throw new ApiError(400, "Invalid task id");
   }
 
-  // find the task (ownership + not deleted)
-  const task = await Task.findOne({
-    _id: id,
-    user: req.user._id,
-    isDeleted: false,
-  });
+  const deletedTask = await Task.findOneAndUpdate(
+    {
+      _id: id,
+      user: req.user._id,
+      isDeleted: false,
+    },
+    {
+      $set: {
+        isDeleted: true,
+      },
+    },
+    {
+      returnDocument: "after", // or new: true
+    },
+  );
 
-  // if task not found or doesn't belong to the user
-  if (!task) {
+  if (!deletedTask) {
     throw new ApiError(404, "Task not found");
   }
 
-  // soft delete → set isDeleted to true
-  task.isDeleted = true;
-  await task.save();
-
-  // send response
   return res
     .status(200)
     .json(new ApiResponse(200, null, "Task deleted successfully"));
