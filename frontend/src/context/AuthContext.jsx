@@ -1,4 +1,10 @@
-import { createContext, useContext, useState, useEffect, useCallback } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
 import { getCurrentUser, logoutUser } from "../api/userApi";
 
 const AuthContext = createContext();
@@ -7,12 +13,26 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+    const handleAuthExpired = () => {
+      setUser(null);
+      setLoading(false);
+    };
+
+    window.addEventListener("auth:expired", handleAuthExpired);
+
+    return () => {
+      window.removeEventListener("auth:expired", handleAuthExpired);
+    };
+  }, []);
+
   const fetchUser = useCallback(async () => {
     setLoading(true);
     try {
       const res = await getCurrentUser();
       setUser(res.data.data);
-    } catch {
+    } catch (error) {
+      console.error("fetchUser error:", error);
       setUser(null);
     } finally {
       setLoading(false);
@@ -38,9 +58,7 @@ export const AuthProvider = ({ children }) => {
   }, [fetchUser]);
 
   return (
-    <AuthContext.Provider
-      value={{ user, setUser, loading, fetchUser, logout }}
-    >
+    <AuthContext.Provider value={{ user, setUser, loading, fetchUser, logout }}>
       {children}
     </AuthContext.Provider>
   );

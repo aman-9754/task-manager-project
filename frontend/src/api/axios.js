@@ -5,6 +5,14 @@ const API = axios.create({
   withCredentials: true, // for cookies (refresh token)
 });
 
+let refreshPromise = null;
+
+const notifyAuthExpired = () => {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event("auth:expired"));
+  }
+};
+
 // attach access token
 // API.interceptors.request.use(
 //   (config) => {
@@ -24,10 +32,12 @@ API.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    // console.log(originalRequest);
+
+    if (!originalRequest || !error.response) {
+      return Promise.reject(error);
+    }
 
     if (
-      error.response &&
       error.response?.status === 401 &&
       !originalRequest._retry &&
       !originalRequest.url.includes("/users/refresh-token")
@@ -35,22 +45,22 @@ API.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        const res = await API.post(
-          "/users/refresh-token",
-          {},
-          { withCredentials: true },
-        );
+        if (!refreshPromise) {
+          refreshPromise = API.post(
+            "/users/refresh-token",
+            {},
+            { withCredentials: true },
+          ).finally(() => {
+            refreshPromise = null;
+          });
+        }
 
-        // const newAccessToken = res.data.data.accessToken;
-        // localStorage.setItem("accessToken", newAccessToken);
-        // originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+        await refreshPromise;
 
         return API(originalRequest);
       } catch (err) {
-        // localStorage.removeItem("accessToken");
-        // window.location.href = "/login";
-
-        return Promise.reject(error); // added by the chat gpt
+        notifyAuthExpired();
+        return Promise.reject(err);
       }
     }
 

@@ -80,7 +80,12 @@ const Profile = () => {
       setPasswordSaving(true);
       await changeCurrentPassword(passwordForm);
       setPasswordForm({ oldPassword: "", newPassword: "" });
-      toast.success("Password changed successfully");
+
+      setUser(null);
+      toast.success(
+        "Password changed successfully. Please log in again with your new password.",
+      );
+      navigate("/login", { replace: true });
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to change password");
     } finally {

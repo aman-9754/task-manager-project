@@ -229,6 +229,12 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 
   if (!incomingRefreshToken) {
     throw new ApiError(401, "Unauthorized request");
+
+    // return res
+    //   .clearCookie("accessToken", options)
+    //   .clearCookie("refreshToken", options)
+    //   .status(401)
+    //   .json(new ApiResponse(401, {}, "Session expired. Please log in again."));
   }
 
   try {
@@ -253,11 +259,6 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
       user._id,
     );
 
-    // const options = {
-    //   httpOnly: true,
-    //   secure: true,
-    // };
-
     const options = {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -276,6 +277,13 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
       );
   } catch (error) {
     throw new ApiError(401, error?.message || "Invalid refresh token");
+
+    //   return res
+    //     .clearCookie("accessToken", options)
+    //     .clearCookie("refreshToken", options)
+    //     .status(401)
+    //     // .json(new ApiResponse(401, {},  error?.message ||   "Session expired. Please log in again."));
+    //     .json(new ApiResponse(401, {},  "Session expired. Please log in again."));
   }
 });
 
@@ -291,13 +299,13 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Valid old and new passwords are required");
   }
 
-  if (oldPassword === newPassword) {
-    throw new ApiError(400, "New password must be different");
-  }
+  // if (oldPassword === newPassword) {
+  //   throw new ApiError(400, "New password must be different");
+  // }
 
-  if (newPassword.length < 6) {
-    throw new ApiError(400, "Password must be at least 6 characters long");
-  }
+  // if (newPassword.length < 6) {
+  //   throw new ApiError(400, "Password must be at least 6 characters long");
+  // }
 
   const user = await User.findById(req.user?._id);
 
@@ -309,6 +317,14 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
 
   if (!isPasswordCorrect) {
     throw new ApiError(401, "Invalid old password");
+  }
+
+  if (oldPassword === newPassword) {
+    throw new ApiError(400, "New password must be different");
+  }
+
+  if (newPassword.length < 6) {
+    throw new ApiError(400, "Password must be at least 6 characters long");
   }
 
   // user.password = newPassword;
